@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+        <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="web3.js"></script>
+        <script type="text/javascript">
+            var contractAddress = '0xD243384d5f88cb059b177Cab0C0e86F26663b46a';
+            var network = "";
+            let networkDisplay = "";
+            var explorerUrl = "";
+            var userAccount = '';
+            var warning = "";
+            let abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "fileMapping",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "getPublicURI",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "value",
+				"type": "string"
+			}
+		],
+		"name": "setFile",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
+        </script>
+        <script type="text/javascript">
+          window.addEventListener('load', function() {
+
+              // Modern dapp browsers...
+              if (window.ethereum) {
+                  web3 = new Web3(ethereum);
+
+                  try { 
+                    // Request account access if needed
+                    ethereum.enable().then(result => {
+                      // Now you can start your app & access web3 freely:
+                      startApp()
+                    })
+                  }
+                  catch(err) {
+                    console.log(err);
+                  }
+              }
+              // Legacy dapp browsers, checking if Web3 has been injected by the browser (Mist/MetaMask)
+              else if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3 = new Web3(web3.currentProvider);
+
+                // Now you can start your app & access web3 freely:
+                startApp();
+
+              } else {
+                console.log('No web3? You should consider trying MetaMask!')
+                // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+                web3 = new Web3( new Web3.providers.HttpProvider( "https://kovan.infura.io/v3/YOUR_INFURA_KEY" ));
+                //web3 = new Web3( new Web3.providers.HttpProvider( "http://localhost:8545/" ));
+                // web3 = new Web3( new Web3.providers.HttpProvider( "https://rpc.tch.in.th" ));
+                
+                // Now you can start your app & access web3 freely:
+                startApp();
+              }
+            })
+        
+            
+            // Get current network
+            function startApp() {
+                web3.eth.net.getId().then(netId => {
+                // web3.version.getNetwork((err, netId) => {
+                  console.log('netId: ' + netId)
+                  switch (netId) {
+                    case 1:
+                        network = 'Mainnet';
+                        networkDisplay = network;
+                        warning = 'please switch your network to Kovan or Thai Chain';
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 2:
+                        network = 'Deprecated Morden';
+                        networkDisplay = network;
+                        warning = 'please switch your network to Kovan or Thai Chain';
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 3:
+                        network = 'Ropsten';
+                        networkDisplay = network;
+                        warning = 'please switch your network to Kovan or Thai Chain';
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 4:
+                        network = 'Rinkeby';
+                        networkDisplay = network;
+                        contractAddress = '0x6075b70b4f94af25e047fac6a538ea06a5206bca';
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 5:
+                        network = 'Goerli';
+                        networkDisplay = network;
+                        contractAddress = '0x4e44378992685d9b2a7b3b11fd7e9ffaf463a841';
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 7:
+                        network = 'Thai Chain';
+                        networkDisplay = network;
+                        contractAddress = '0x0898424ddf8f9478aad9f2280a6480f1858ad1c6';
+                        explorerUrl = "https://exp.tch.in.th/tx/"
+                        break
+                    case 42:
+                        network = 'Kovan';
+                        networkDisplay = network;
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 420:
+                        network = 'Goerli-Optimism';
+                        networkDisplay = 'Goerli Optimism';
+                        contractAddress = '0x02302b985d82a3f8dd9ba9d0bcea620bbcbeec63';
+                        explorerUrl = "https://" + network.toLowerCase() + ".etherscan.io/tx/"
+                        break
+                    case 1337:
+                        network = 'Kovan - Optimism';
+                        networkDisplay = '<strong>Kovan Optimism</strong><br/>(Level 2 Ethereum)';
+                        contractAddress = '0xE6dCD042c4dDaC0f390A7B1CB8B4D60DD20b6338';
+                        explorerUrl = "https://kovan-l2-explorer.surge.sh/tx/";
+                        break
+                    case 5777:
+                        network = 'Ganache';
+                        networkDisplay = network;
+                        break
+                    case 11155111:
+                        network = 'Sepolia';
+                        networkDisplay = network;
+                        break
+                    default:
+                        network = 'Unknown';
+                        networkDisplay = network;
+                        warning = 'please switch your network to Kovan or Thai Chain';
+                  }
+                  $("#eth_network").html(networkDisplay);
+                  $("#warning").text(warning);
+                  $("#candidateContractAddress").val(contractAddress);
+                  $("#contract").html(contractAddress);
+                  
+                  
+                  web3.eth.getAccounts().then(accounts => {
+                    userAccount = accounts[0];
+                    $("#eth_address").text(userAccount);
+
+                    reloadInfo();
+                  })
+                })
+            }
+            
+            function reloadInfo() {
+
+                // Wallet
+                try { 
+                    getBalance();
+                }
+                catch(err) {
+                    console.log(err);
+                }
+            }
+            
+            // Get block info
+            function getBlock() {
+                web3.eth.getBlock(48, function(error, result){
+                    if(!error) {
+                        console.log(JSON.stringify(result));
+                        $("#balance").html(JSON.stringify(result));
+                    } else {
+                        console.error(error);
+                    }
+                })
+            }
+            
+            // Get account balance
+            function getBalance() {
+              web3.eth.getBalance(userAccount).then(result => {
+                  $("#balance").html(web3.utils.fromWei(result));
+              }); // getbalance account
+            }
+        </script>
+        
+        <!-- Candidate contract -->
+        <script type="text/javascript">
+
+            async function loadFileUrl() {
+              console.log('load file')
+              let lookupId = $("#lookup_id").val()
+              
+              let contract = new web3.eth.Contract(abi, contractAddress)
+              let result = await contract.methods.getPublicURI(lookupId).call()
+              console.log(result)
+
+              $("#result_link").text(result)
+              $("#result_link").attr("href", result)
+              $("#result_image").attr("src", result)
+            }
+
+            function openContractOnEtherScan() {
+              let address = $("#candidateContractAddress").val()
+              let url = 'https://' + network + '.etherscan.io/address/' + address
+              window.open(url,'_blank');
+            }
+
+            function openUserAddressOnEtherScan() {
+              let url = 'https://' + network + '.etherscan.io/address/' + userAccount
+              window.open(url,'_blank');
+            }
+            
+        </script>
+            
+            
+            
+        </script>
+    
+    <style type="text/css">
+        .p_network {
+            border: 4px solid;
+            border-radius: 10px;
+            padding: 10px;
+            border-color: #2196F3;
+            text-align: center;
+            width: 15em;
+            margin: auto;
+            margin-top: 20px;
+        }
+        .p_warning {
+            padding: 10px;
+            text-align: center;
+            margin: auto;
+            color: red;
+        }
+
+        .title {
+            text-align: center;
+            margin: auto;
+            margin-top: 9px;
+            margin-bottom: 20px;
+        }
+        
+        table.info tr {
+            line-height: 2em;
+        }
+        
+        table.info .table-label {
+            width: 10em;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        table.info .table-value {
+          word-break: break-all;
+        }
+
+        .candidate_name {
+            font-size: 26px;
+            margin-bottom: 16px;
+        }
+
+        .candidate_total_vote {
+          font-size: 50px;
+        }
+    </style>
+    </head>
+    <body>
+        <section class="hero is-primary">
+          <div class="hero-body">
+            <div class="container">
+              <h1 class="title">
+                Data Storage
+              </h1>
+            </div>
+          </div>
+        </section>
+        <p class="p_network">
+            <span>Network: </span>
+            <span id="eth_network"></span>
+        </p>
+        <p class="p_warning">
+          <span id="warning"></span>
+        </p>
+        
+        <!-- Candidate --> 
+        <div class="tile is-ancestor" style="margin-left: 10px; margin-right: 10px;">
+          <div class="tile is-parent">
+            <article class="tile is-child box notification is-info">
+              <p class="title">Data Storage</p>
+                <table class="info">
+                  <tbody>
+                    <tr>
+                      <td class="table-label">ID Lookup:</td>
+                      <td class="table-value">
+                        <input id="lookup_id" class="input is-rounded" style="width:27em;" type="text" placeholder="Rounded input" value="1111" />
+                        <button class="candidate_vote_button button is-warning is-success is-rounded" style="font-size:16px;" onClick="javascript:loadFileUrl();">Load</button>
+                        
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+            </article>
+          </div>
+          <div class="tile is-parent">
+            <article class="tile is-child box notification is-info">
+              <p class="title">Wallet</p>
+              <table class="info">
+                <tbody>
+                  <tr>
+                    <td class="table-label">account:</td>
+                    <td class="table-value">
+                      <span id="eth_address"></span>
+                      <a href="javascript:openUserAddressOnEtherScan();" target="_blank" style="margin-left: 8px;">
+                        <i class="fas fa-lg fa-external-link-alt"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="table-label">ether:</td>
+                    <td class="table-value"><span id="balance"></span></td>
+                  </tr>
+                  <tr>
+                    <td class="table-label">contract:</td>
+                    <td class="table-value"><span id="contract"></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </article>
+          </div>
+        </div>
+        
+        <div style="clear:both;">
+            
+        </div>
+        
+        <!-- Candidate copy --> 
+        <div style="display:none;">
+          <div id="candidate_copy" class="tile is-parent">
+            <article class="tile is-child box notification is-info">
+              <p class="title candidate_name">Name</p>
+              <p style="margin: 0 auto; width: fit-content;">
+                <span class="candidate_total_vote">0</span>
+              </p>
+              <p style="margin: 0 auto; width: fit-content; margin-top: 20px;">
+                <button class="candidate_vote_button button is-large is-success is-rounded" onClick="javascript:voteAt(xx);">Vote</button>
+              </p>
+              <p class="candidate_progress" style="margin-top: 12px;display:none;">
+                <progress class="progress is-primary" max="100">30%</progress>
+              </p>
+            </article>
+          </div>
+        </div>
+        
+        <div id="more_candidates" class="tile is-ancestor" style="margin-left: 10px; margin-right: 10px;">
+
+        </div>
+
+        <div style="clear:both;">
+            
+        </div>
+
+        <div id="transaction">
+          <p>
+            <span>Your pending transaction: </span>
+            <span>
+              <a id="tx_link" target="_blank" href="https://dev.kulap.io/landing/">-</a>
+            </span>
+          </p>
+          <p>
+              <span>Status: </span>
+              <span id="status_value">
+                -
+              </span>
+            </p>
+          
+            <p>
+              <span>Result: </span>
+              <span>
+                <a id="result_link" target="_blank" href="">-</a>
+                <img id="result_image"  />
+              </span>
+            </p>
+        </div>
+
+
+        <footer class="footer">
+          <div class="content has-text-centered">
+            <p>
+              This project is sponsored by <a href="https://www.kulap.io">KULAP.io</a> | Open source on <a href="https://github.com/kulapio/EthereumWorkshop">Github</a>
+            </p>
+          </div>
+        </footer>
+        
+    </body>
+</html>
